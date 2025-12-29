@@ -23,12 +23,19 @@ button:active { background:#444; }
 .preset-btn { width:auto; min-width:64px; padding:6px 10px; border-radius:6px; background:#0b6; color:#042; font-weight:600; border:none; font-size:1rem; }
 .preset-btn:active { filter:brightness(.9); }
 /* added: controls layout and bust/undo button colors */
-.controls { display:flex; gap:10px; justify-content:center; align-items:center; }
+.controls { display:flex; gap:10px; justify-content:center; align-items:center; flex-direction:column; }
+.controls .sub { display:flex; gap:10px; }
 .controls button { width:auto; min-width:120px; max-width:none; padding:10px 14px; }
 .bust-btn { background:#c62828; color:white; }
 .bust-btn:active { background:#e53935; }
 .undo-btn { background:#6b6b6b; }
 .undo-btn:active { background:#8a8a8a; }
+
+/* new: input row so submit stays next to input */
+.input-row { display:flex; gap:10px; justify-content:center; align-items:center; }
+.input-row input { width:160px; max-width:40vw; margin:0; }
+/* new: tighter submit button override to avoid global 90% width */
+.input-row .submit-btn { width: auto !important; min-width:80px; padding:8px 10px; font-size:1rem; }
 </style>
 </head>
 <body>
@@ -43,12 +50,16 @@ button:active { background:#444; }
 <div class="small">Visits at this target: <span id="visits">0</span></div>
 <div class="small">Consecutive 9-dart misses: <span id="consecMisses">0</span></div>
 
-<input id="visit" type="number" inputmode="numeric" placeholder="Enter 3-dart total"/>
-<!-- changed: submit, bust and undo side-by-side -->
+<!-- changed: input + submit sit side-by-side; bust and undo underneath -->
+<div class="input-row">
+  <input id="visit" type="number" inputmode="numeric" placeholder="3-dart total"/>
+  <button class="submit-btn" onclick="submitVisit()">Submit</button>
+</div>
 <div class="controls">
-  <button onclick="submitVisit()">Submit visit</button>
-  <button class="bust-btn" onclick="bustVisit()">Bust</button>
-  <button class="undo-btn" onclick="undo()">Undo</button>
+  <div class="sub">
+    <button class="bust-btn" onclick="bustVisit()">Bust</button>
+    <button class="undo-btn" onclick="undo()">Undo</button>
+  </div>
 </div>
 
 <!-- added: quick numeric buttons 1, 2, 3 -->
