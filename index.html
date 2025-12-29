@@ -33,9 +33,22 @@ button:active { background:#444; }
 
 /* new: input row so submit stays next to input */
 .input-row { display:flex; gap:10px; justify-content:center; align-items:center; }
-.input-row input { width:160px; max-width:40vw; margin:0; }
-/* new: tighter submit button override to avoid global 90% width */
-.input-row .submit-btn { width: auto !important; min-width:80px; padding:8px 10px; font-size:1rem; }
+/* make input and submit share sizing so submit matches input height */
+.input-row input { width:160px; max-width:40vw; margin:0; padding:12px; box-sizing:border-box; height:48px; font-size:1.6rem; }
+/* new: tighter submit button override to avoid global 90% width and match height */
+.input-row .submit-btn { width: auto !important; min-width:80px; padding:12px 10px; font-size:1.6rem; height:48px; box-sizing:border-box; }
+
+/* keypad styles: tighter layout */
+.key-row { display:flex; gap:12px; justify-content:center; align-items:flex-start; margin-top:10px; }
+.preset-col { display:flex; flex-direction:column; gap:8px; }
+.preset-col .preset-btn { width:88px; padding:8px 10px; text-align:center; }
+.key-area { display:flex; flex-direction:column; align-items:center; gap:0; margin-top:0; }
+.keypad { display:flex; flex-direction:column; gap:0; }
+.keypad-grid { display:grid; grid-template-columns: repeat(3, 56px); gap:0; justify-content:center; }
+.key-btn { width:56px; height:56px; border-radius:6px; background:#333; color:white; border:none; font-size:1.1rem; }
+.key-btn:active { background:#555; }
+.key-action { background:#888; color:#fff; }
+.key-enter { background:#0a84ff; color:#fff; grid-column:span 3; height:44px; margin-top:6px; }
 </style>
 </head>
 <body>
@@ -52,7 +65,7 @@ button:active { background:#444; }
 
 <!-- changed: input + submit sit side-by-side; bust and undo underneath -->
 <div class="input-row">
-  <input id="visit" type="number" inputmode="numeric" placeholder="3-dart total"/>
+  <input id="visit" type="text" readonly inputmode="none" placeholder="3-dart total"/>
   <button class="submit-btn" onclick="submitVisit()">Submit</button>
 </div>
 <div class="controls">
@@ -62,25 +75,52 @@ button:active { background:#444; }
   </div>
 </div>
 
-<!-- added: quick numeric buttons 1, 2, 3 -->
+<!-- quick numeric buttons 1,2,3 kept -->
 <div id="quickNums">
   <button class="num-btn" onclick="submitVisit(1)">1</button>
   <button class="num-btn" onclick="submitVisit(2)">2</button>
   <button class="num-btn" onclick="submitVisit(3)">3</button>
 </div>
 
-<!-- added: preset visit buttons that auto-fill and submit -->
-<div class="preset-row">
-  <button class="preset-btn" onclick="autoSubmitVisit(26)">26</button>
-  <button class="preset-btn" onclick="autoSubmitVisit(29)">29</button>
-  <button class="preset-btn" onclick="autoSubmitVisit(41)">41</button>
-  <button class="preset-btn" onclick="autoSubmitVisit(45)">45</button>
-  <button class="preset-btn" onclick="autoSubmitVisit(57)">57</button>
-  <button class="preset-btn" onclick="autoSubmitVisit(60)">60</button>
-  <button class="preset-btn" onclick="autoSubmitVisit(95)">95</button>
-  <button class="preset-btn" onclick="autoSubmitVisit(100)">100</button>
-  <button class="preset-btn" onclick="autoSubmitVisit(140)">140</button>
-  <button class="preset-btn" onclick="autoSubmitVisit(180)">180</button>
+<!-- keypad with presets left and right -->
+<div class="key-row">
+  <div class="preset-col">
+    <button class="preset-btn" onclick="autoSubmitVisit(26)">26</button>
+    <button class="preset-btn" onclick="autoSubmitVisit(29)">29</button>
+    <button class="preset-btn" onclick="autoSubmitVisit(41)">41</button>
+    <button class="preset-btn" onclick="autoSubmitVisit(45)">45</button>
+    <button class="preset-btn" onclick="autoSubmitVisit(57)">57</button>
+  </div>
+
+  <div class="key-area">
+    <div class="keypad">
+      <div class="keypad-grid">
+        <button class="key-btn" onclick="keypadPress('7')">7</button>
+        <button class="key-btn" onclick="keypadPress('8')">8</button>
+        <button class="key-btn" onclick="keypadPress('9')">9</button>
+        <button class="key-btn" onclick="keypadPress('4')">4</button>
+        <button class="key-btn" onclick="keypadPress('5')">5</button>
+        <button class="key-btn" onclick="keypadPress('6')">6</button>
+        <button class="key-btn" onclick="keypadPress('1')">1</button>
+        <button class="key-btn" onclick="keypadPress('2')">2</button>
+        <button class="key-btn" onclick="keypadPress('3')">3</button>
+      </div>
+      <div class="keypad-grid">
+        <button class="key-btn key-action" onclick="keypadClear()">C</button>
+        <button class="key-btn" onclick="keypadPress('0')">0</button>
+        <button class="key-btn key-action" onclick="keypadBackspace()">←</button>
+      </div>
+      <button class="key-btn key-enter" onclick="submitVisit()">Enter</button>
+    </div>
+  </div>
+
+  <div class="preset-col">
+    <button class="preset-btn" onclick="autoSubmitVisit(60)">60</button>
+    <button class="preset-btn" onclick="autoSubmitVisit(95)">95</button>
+    <button class="preset-btn" onclick="autoSubmitVisit(100)">100</button>
+    <button class="preset-btn" onclick="autoSubmitVisit(140)">140</button>
+    <button class="preset-btn" onclick="autoSubmitVisit(180)">180</button>
+  </div>
 </div>
 
 <div class="big" id="status"></div>
@@ -252,6 +292,21 @@ function updateUI(status="") {
 function autoSubmitVisit(value) {
   visitInput.value = String(value);
   submitVisit();
+}
+
+// keypad handlers
+function keypadPress(d) {
+  // Append digit but prevent leading zeros and overly long numbers
+  let cur = String(visitInput.value || "");
+  if (cur === "0") cur = "";
+  if (cur.length >= 4) return; // limit to 4 digits
+  visitInput.value = cur + d;
+}
+function keypadBackspace() {
+  visitInput.value = String(visitInput.value || "").slice(0, -1);
+}
+function keypadClear() {
+  visitInput.value = "";
 }
 
 // Initial render
