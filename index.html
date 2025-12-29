@@ -22,6 +22,8 @@ button:active { background:#444; }
 .controls button { width:auto; min-width:120px; max-width:none; padding:10px 14px; }
 .bust-btn { background:#c62828; }
 .bust-btn:active { background:#e53935; }
+.undo-btn { background:#6b6b6b; }
+.undo-btn:active { background:#8a8a8a; }
 </style>
 </head>
 <body>
@@ -37,10 +39,11 @@ button:active { background:#444; }
 <div class="small">Consecutive 9-dart misses: <span id="consecMisses">0</span></div>
 
 <input id="visit" type="number" inputmode="numeric" placeholder="Enter 3-dart total"/>
-<!-- changed: submit and bust side-by-side -->
+<!-- changed: submit, bust and undo side-by-side -->
 <div class="controls">
   <button onclick="submitVisit()">Submit visit</button>
   <button class="bust-btn" onclick="bustVisit()">Bust</button>
+  <button class="undo-btn" onclick="undo()">Undo</button>
 </div>
 
 <!-- added: quick numeric buttons 1, 2, 3 -->
@@ -78,6 +81,7 @@ function setStartingNumber() {
     alert("Please enter a positive number");
     return;
   }
+  pushState();
   game.target = Math.floor(val);
   game.currentRemaining = game.target;
   game.score = 0;
@@ -90,6 +94,7 @@ function submitVisit(quickSetValue = null) {
   let dartsUsed;
   let increment;
   if (quickSetValue !== null) {
+    pushState();
     dartsUsed = (3 * game.visitsAtTarget) + quickSetValue;
     increment = 10 - dartsUsed;
     game.score += increment;
@@ -107,6 +112,7 @@ function submitVisit(quickSetValue = null) {
   visitInput.value = "";
   if (!Number.isFinite(visit) || visit < 0) return;
 
+  pushState();
   game.visitsAtTarget++;
 
   // Exact hit
@@ -162,6 +168,7 @@ function submitVisit(quickSetValue = null) {
 
 // added: handler for explicit Bust button (counts as a visit and applies 3-visit logic)
 function bustVisit() {
+  pushState();
   game.visitsAtTarget++;
   game.currentRemaining -= 0; // Remain unchanged as per original rules
   updateUI(`Bust! Missed the target, remaining reset to target`);
@@ -181,6 +188,25 @@ function bustVisit() {
       }
     }
   }
+}
+
+let history = [];
+function pushState() {
+  // store a deep copy of the game state
+  history.push(JSON.parse(JSON.stringify(game)));
+  // optional cap
+  if (history.length > 50) history.shift();
+}
+
+function undo() {
+  if (history.length === 0) {
+    updateUI('Nothing to undo');
+    return;
+  }
+  const prev = history.pop();
+  // replace game object properties
+  game = prev;
+  updateUI('Undid last action');
 }
 
 function updateUI(status="") {
