@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>121 → 180 Darts Practice</title>
 <style>
-body { font-family: system-ui, sans-serif; text-align:center; padding:20px; background:#f7f7f7; }
+body { font-family: system-ui, sans-serif; text-align:center; padding:20px; background:#e0e0e0; }
 .big { font-size:2.2rem; margin:12px 0; }
 .small { font-size:1.2rem; color:#555; }
 input, button { font-size:1.6rem; padding:12px; margin:8px 0; width:90%; max-width:320px; }
@@ -15,8 +15,8 @@ button:active { background:#444; }
 .top-left { position: absolute; top: 12px; left: 12px; padding:8px 10px; font-size:1rem; width:auto; max-width:none; }
 /* added: quick numeric button styles */
 #quickNums { margin-top: 6px; }
-.num-btn { width:64px; margin:6px 6px; padding:8px; font-size:1.2rem; border-radius:6px; background:#444; color:#fff; border:none; }
-.num-btn:active { background:#666; }
+.num-btn { width:64px; margin:6px 6px; padding:8px; font-size:1.2rem; border-radius:6px; background:#444; color:#fff; border:2px solid #fff; box-sizing:border-box; }
+.num-btn:active { background:#666; border-color:#ddd; }
 /* added: preset visit buttons */
 .preset-row { margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
 /* make preset buttons narrow despite the global button width:90% rule */
@@ -38,17 +38,22 @@ button:active { background:#444; }
 /* new: tighter submit button override to avoid global 90% width and match height */
 .input-row .submit-btn { width: auto !important; min-width:80px; padding:12px 10px; font-size:1.6rem; height:48px; box-sizing:border-box; }
 
-/* keypad styles: tighter layout */
-.key-row { display:flex; gap:12px; justify-content:center; align-items:flex-start; margin-top:10px; }
-.preset-col { display:flex; flex-direction:column; gap:8px; }
-.preset-col .preset-btn { width:88px; padding:8px 10px; text-align:center; }
-.key-area { display:flex; flex-direction:column; align-items:center; gap:0; margin-top:0; }
-.keypad { display:flex; flex-direction:column; gap:0; }
-.keypad-grid { display:grid; grid-template-columns: repeat(3, 56px); gap:0; justify-content:center; }
-.key-btn { width:56px; height:56px; border-radius:6px; background:#333; color:white; border:none; font-size:1.1rem; }
-.key-btn:active { background:#555; }
-.key-action { background:#888; color:#fff; }
-.key-enter { background:#0a84ff; color:#fff; grid-column:span 3; height:44px; margin-top:6px; }
+/* keypad styles: tighter layout (updated to remove spacing between keys and presets) */
+:root { --keypad-height: 280px; }
+.key-row { display:flex; gap:0; justify-content:center; align-items:stretch; margin-top:10px; }
+.preset-col { display:flex; flex-direction:column; gap:0; height:var(--keypad-height); }
+/* make preset buttons match keypad key height and remove margins so columns sit flush */
+.preset-col .preset-btn { width:88px; padding:0; height:calc(var(--keypad-height) / 5); line-height:calc(var(--keypad-height) / 5); text-align:center; margin:0; border-radius:6px; box-sizing:border-box; }
+.key-area { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; margin-top:0; height:var(--keypad-height); }
+.keypad { display:flex; flex-direction:column; gap:0; justify-content:center; height:100%; }
+/* distribute the keypad into 4 equal rows (3 rows of numbers + bottom row) so they fill the key-area */
+.keypad-grid { display:grid; grid-template-columns: repeat(3, 56px); gap:0; justify-content:center; grid-auto-rows: calc(var(--keypad-height) / 4); }
+.key-btn { width:56px; /* remove fixed height and let the grid row size it */ border-radius:6px; background:#333; color:white; border:2px solid #fff; font-size:1.1rem; margin:0; padding:0; box-sizing:border-box; height:100%; display:flex; align-items:center; justify-content:center; }
+.key-btn:active { background:#555; border-color:#ddd; }
+.key-action { background:#888; color:#fff; margin:0; padding:0; }
+.key-enter { background:#0a84ff; color:#fff; grid-column:span 3; height:100%; margin:0; padding:0; }
+/* override global button margins inside the keypad area */
+.key-row button, .key-row input, .preset-col button { margin:0; }
 </style>
 </head>
 <body>
@@ -58,7 +63,7 @@ button:active { background:#444; }
 
 <div class="big">Target: <span id="target">121</span></div>
 <!-- <div class="big">Score: <span id="score">0</span></div> -->
-<div class="small">Remaining this attempt:</div>
+<div class="small">Remaining
 <div class="big"><span id="remaining">121</span></div>
 <div class="small">Visits at this target: <span id="visits">0</span></div>
 <div class="small">Consecutive 9-dart misses: <span id="consecMisses">0</span></div>
@@ -133,6 +138,9 @@ let game = {
   consecutive9Misses: 0
 };
 
+// values that cannot be finished with a single dart (require setup/double on final dart rules)
+const invalidSingleFinishes = [23,29,31,35,37,41,43,44,46,47,49,52,53,55,56,58,59];
+
 const remainingEl = document.getElementById("remaining");
 const targetEl = document.getElementById("target");
 // const scoreEl = document.getElementById("score");
@@ -163,6 +171,12 @@ function submitVisit(quickSetValue = null) {
   let dartsUsed;
   let increment;
   if (quickSetValue !== null) {
+    // Disallow a '1-dart' quick success on remaining scores that cannot be finished with 1 dart
+    if (quickSetValue === 1 && invalidSingleFinishes.includes(game.currentRemaining)) {
+      updateUI(`Cannot finish ${game.currentRemaining} with 1 dart.`);
+      return;
+    }
+
     pushState();
     dartsUsed = (3 * game.visitsAtTarget) + quickSetValue;
     increment = 10 - dartsUsed;
@@ -186,10 +200,24 @@ function submitVisit(quickSetValue = null) {
 
   // Exact hit
   if (visit === game.currentRemaining) {
+    // Restore original prompt behavior for darts used
     dartsUsed = prompt("You hit the target! How many darts did it take? (1–9)", "3");
     dartsUsed = Number(dartsUsed);
     if (!Number.isFinite(dartsUsed) || dartsUsed < 1) dartsUsed = 1;
+
     if (dartsUsed > 9) dartsUsed = 9;
+
+
+    // Disallow declaring a hit when dartsUsed is 4 or 7 for certain impossible single-dart finishes
+    if (([1, 4, 7].includes(dartsUsed)) && invalidSingleFinishes.includes(game.currentRemaining)) {
+      // revert the pushed state (we called pushState earlier) by restoring last snapshot
+      if (history && history.length > 0) {
+        const prev = history.pop();
+        game = prev;
+      }
+      updateUI(`Cannot finish ${game.currentRemaining} with ${dartsUsed} darts`);
+      return;
+    }
 
     increment = 10 - dartsUsed;
     game.score += increment;
