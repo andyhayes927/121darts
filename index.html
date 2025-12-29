@@ -13,6 +13,15 @@ button { background:#222; color:white; border:none; border-radius:6px; }
 button:active { background:#444; }
 /* added: small top-left button style */
 .top-left { position: absolute; top: 12px; left: 12px; padding:8px 10px; font-size:1rem; width:auto; max-width:none; }
+/* added: quick numeric button styles */
+#quickNums { margin-top: 6px; }
+.num-btn { width:64px; margin:6px 6px; padding:8px; font-size:1.2rem; border-radius:6px; background:#444; color:#fff; border:none; }
+.num-btn:active { background:#666; }
+/* added: controls layout and bust button */
+.controls { display:flex; gap:10px; justify-content:center; align-items:center; }
+.controls button { width:auto; min-width:120px; max-width:none; padding:10px 14px; }
+.bust-btn { background:#c62828; }
+.bust-btn:active { background:#e53935; }
 </style>
 </head>
 <body>
@@ -28,7 +37,18 @@ button:active { background:#444; }
 <div class="small">Consecutive 9-dart misses: <span id="consecMisses">0</span></div>
 
 <input id="visit" type="number" inputmode="numeric" placeholder="Enter 3-dart total"/>
-<button onclick="submitVisit()">Submit visit</button>
+<!-- changed: submit and bust side-by-side -->
+<div class="controls">
+  <button onclick="submitVisit()">Submit visit</button>
+  <button class="bust-btn" onclick="bustVisit()">Bust</button>
+</div>
+
+<!-- added: quick numeric buttons 1, 2, 3 -->
+<div id="quickNums">
+  <button class="num-btn" onclick="submitVisit(1)">1</button>
+  <button class="num-btn" onclick="submitVisit(2)">2</button>
+  <button class="num-btn" onclick="submitVisit(3)">3</button>
+</div>
 
 <div class="big" id="status"></div>
 
@@ -51,7 +71,7 @@ const visitInput = document.getElementById("visit");
 
 // added: handler to prompt for a starting number and reset game state
 function setStartingNumber() {
-  let val = prompt("Enter starting target (positive integer):", String(game.target));
+  let val = prompt("Enter starting target:", String(game.target));
   if (val === null) return; // cancelled
   val = Number(val);
   if (!Number.isFinite(val) || val <= 0) {
@@ -66,7 +86,23 @@ function setStartingNumber() {
   updateUI(`Starting target set to ${game.target}`);
 }
 
-function submitVisit() {
+function submitVisit(quickSetValue = null) {
+  let dartsUsed;
+  let increment;
+  if (quickSetValue !== null) {
+    dartsUsed = (3 * game.visitsAtTarget) + quickSetValue;
+    increment = 10 - dartsUsed;
+    game.score += increment;
+    game.target += increment;
+    game.currentRemaining = game.target;
+
+    // Reset counters
+    game.visitsAtTarget = 0;
+    game.consecutive9Misses = 0;
+
+    updateUI(`HIT! Score +${increment}, target now ${game.target}`);
+    return;
+  }
   let visit = Number(visitInput.value);
   visitInput.value = "";
   if (!Number.isFinite(visit) || visit < 0) return;
@@ -75,12 +111,12 @@ function submitVisit() {
 
   // Exact hit
   if (visit === game.currentRemaining) {
-    let dartsUsed = prompt("You hit the target! How many darts did it take? (1–9)", "3");
+    dartsUsed = prompt("You hit the target! How many darts did it take? (1–9)", "3");
     dartsUsed = Number(dartsUsed);
     if (!Number.isFinite(dartsUsed) || dartsUsed < 1) dartsUsed = 1;
     if (dartsUsed > 9) dartsUsed = 9;
 
-    let increment = 10 - dartsUsed;
+    increment = 10 - dartsUsed;
     game.score += increment;
     game.target += increment;
     game.currentRemaining = game.target;
@@ -113,6 +149,29 @@ function submitVisit() {
     updateUI(`9-dart attempt missed, remaining reset to target ${game.target}`);
 
     // Trigger penalty prompt only after 3 consecutive 9-dart misses
+    if (game.consecutive9Misses >= 3) {
+      const takeShot = confirm("3 consecutive 9-dart attempts missed! Take shot?\nOK = take shot\nCancel = decrease 1");
+      if (!takeShot) {
+        game.target--;
+        game.currentRemaining = game.target;
+        updateUI(`Target decreased by 1! New target: ${game.target}`);
+      }
+    }
+  }
+}
+
+// added: handler for explicit Bust button (counts as a visit and applies 3-visit logic)
+function bustVisit() {
+  game.visitsAtTarget++;
+  game.currentRemaining -= 0; // Remain unchanged as per original rules
+  updateUI(`Bust! Missed the target, remaining reset to target`);
+
+  if (game.visitsAtTarget >= 3) {
+    game.consecutive9Misses++;
+    game.visitsAtTarget = 0;
+    game.currentRemaining = game.target;
+    updateUI(`9-dart attempt missed, remaining reset to target ${game.target}`);
+
     if (game.consecutive9Misses >= 3) {
       const takeShot = confirm("3 consecutive 9-dart attempts missed! Take shot?\nOK = take shot\nCancel = decrease 1");
       if (!takeShot) {
