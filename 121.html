@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>121 → 180 Darts Practice</title>
+<style>
+body { font-family: system-ui, sans-serif; text-align:center; padding:20px; background:#f7f7f7; }
+.big { font-size:2.2rem; margin:12px 0; }
+.small { font-size:1.2rem; color:#555; }
+input, button { font-size:1.6rem; padding:12px; margin:8px 0; width:90%; max-width:320px; }
+button { background:#222; color:white; border:none; border-radius:6px; }
+button:active { background:#444; }
+</style>
+</head>
+<body>
+
+<div class="big">Target: <span id="target">121</span></div>
+<div class="big">Score: <span id="score">0</span></div>
+<div class="small">Remaining this attempt:</div>
+<div class="big"><span id="remaining">121</span></div>
+<div class="small">Visits at this target: <span id="visits">0</span></div>
+<div class="small">Consecutive 9-dart misses: <span id="consecMisses">0</span></div>
+
+<input id="visit" type="number" inputmode="numeric" placeholder="Enter 3-dart total"/>
+<button onclick="submitVisit()">Submit visit</button>
+
+<div class="big" id="status"></div>
+
+<script>
+let game = {
+  target: 121,
+  score: 0,
+  currentRemaining: 121,
+  visitsAtTarget: 0,
+  consecutive9Misses: 0
+};
+
+const remainingEl = document.getElementById("remaining");
+const targetEl = document.getElementById("target");
+const scoreEl = document.getElementById("score");
+const statusEl = document.getElementById("status");
+const visitsEl = document.getElementById("visits");
+const consecMissesEl = document.getElementById("consecMisses");
+const visitInput = document.getElementById("visit");
+
+function submitVisit() {
+  let visit = Number(visitInput.value);
+  visitInput.value = "";
+  if (!Number.isFinite(visit) || visit < 0) return;
+
+  game.visitsAtTarget++;
+
+  // Exact hit
+  if (visit === game.currentRemaining) {
+    let dartsUsed = prompt("You hit the target! How many darts did it take? (1–9)", "3");
+    dartsUsed = Number(dartsUsed);
+    if (!Number.isFinite(dartsUsed) || dartsUsed < 1) dartsUsed = 1;
+    if (dartsUsed > 9) dartsUsed = 9;
+
+    let increment = 10 - dartsUsed;
+    game.score += increment;
+    game.target += increment;
+    game.currentRemaining = game.target;
+
+    // Reset counters
+    game.visitsAtTarget = 0;
+    game.consecutive9Misses = 0;
+
+    updateUI(`HIT! Score +${increment}, target now ${game.target}`);
+    return;
+  }
+
+  // Bust (over-hit)
+  if (visit > game.currentRemaining) {
+    // game.currentRemaining = game.target;
+    updateUI(`Bust! Missed the target, remaining reset to target`);
+    return;
+  }
+
+  // Normal miss (under-hit)
+  game.currentRemaining -= visit;
+  updateUI(`Next visit, remaining: ${game.currentRemaining}`);
+
+  // After 3 visits (1 9-dart attempt) without hitting target
+  if (game.visitsAtTarget >= 3) {
+    game.consecutive9Misses++;
+    game.visitsAtTarget = 0;
+    game.currentRemaining = game.target;
+    updateUI(`9-dart attempt missed, remaining reset to target ${game.target}`);
+
+    // Trigger penalty prompt only after 3 consecutive 9-dart misses
+    if (game.consecutive9Misses >= 3) {
+      const takeShot = confirm("3 consecutive 9-dart attempts missed! Take shot?\nOK = take shot\nCancel = decrease 1");
+      if (!takeShot) {
+        game.target--;
+        game.currentRemaining = game.target;
+        updateUI(`Target decreased by 1! New target: ${game.target}`);
+      }
+    }
+  }
+}
+
+function updateUI(status="") {
+  targetEl.textContent = game.target;
+  scoreEl.textContent = game.score;
+  remainingEl.textContent = game.currentRemaining;
+  visitsEl.textContent = game.visitsAtTarget;
+  consecMissesEl.textContent = game.consecutive9Misses;
+  statusEl.textContent = status;
+}
+
+// Initial render
+updateUI();
+</script>
+
+</body>
+</html>
+
