@@ -11,9 +11,14 @@ body { font-family: system-ui, sans-serif; text-align:center; padding:20px; back
 input, button { font-size:1.6rem; padding:12px; margin:8px 0; width:90%; max-width:320px; }
 button { background:#222; color:white; border:none; border-radius:6px; }
 button:active { background:#444; }
+/* added: small top-left button style */
+.top-left { position: absolute; top: 12px; left: 12px; padding:8px 10px; font-size:1rem; width:auto; max-width:none; }
 </style>
 </head>
 <body>
+
+<!-- added: Set start button in the top-left -->
+<button class="top-left" onclick="setStartingNumber()">Set start</button>
 
 <div class="big">Target: <span id="target">121</span></div>
 <div class="big">Score: <span id="score">0</span></div>
@@ -44,6 +49,23 @@ const visitsEl = document.getElementById("visits");
 const consecMissesEl = document.getElementById("consecMisses");
 const visitInput = document.getElementById("visit");
 
+// added: handler to prompt for a starting number and reset game state
+function setStartingNumber() {
+  let val = prompt("Enter starting target (positive integer):", String(game.target));
+  if (val === null) return; // cancelled
+  val = Number(val);
+  if (!Number.isFinite(val) || val <= 0) {
+    alert("Please enter a positive number");
+    return;
+  }
+  game.target = Math.floor(val);
+  game.currentRemaining = game.target;
+  game.score = 0;
+  game.visitsAtTarget = 0;
+  game.consecutive9Misses = 0;
+  updateUI(`Starting target set to ${game.target}`);
+}
+
 function submitVisit() {
   let visit = Number(visitInput.value);
   visitInput.value = "";
@@ -71,16 +93,17 @@ function submitVisit() {
     return;
   }
 
-  // Bust (over-hit)
   if (visit > game.currentRemaining) {
-    // game.currentRemaining = game.target;
+    // Bust (over-hit)
+    game.currentRemaining -= 0; // Remain unchanged as per original rules
     updateUI(`Bust! Missed the target, remaining reset to target`);
-    return;
+  } else {
+    // Normal miss (under-hit)
+    game.currentRemaining -= visit;
+    updateUI(`Next visit, remaining: ${game.currentRemaining}`);
   }
 
-  // Normal miss (under-hit)
-  game.currentRemaining -= visit;
-  updateUI(`Next visit, remaining: ${game.currentRemaining}`);
+  
 
   // After 3 visits (1 9-dart attempt) without hitting target
   if (game.visitsAtTarget >= 3) {
