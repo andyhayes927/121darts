@@ -57,7 +57,7 @@ button:active { background:#444; }
 <button class="top-left" onclick="setStartingNumber()">Set start</button>
 
 <div class="big">Target: <span id="target">121</span></div>
-<div class="big">Score: <span id="score">0</span></div>
+<!-- <div class="big">Score: <span id="score">0</span></div> -->
 <div class="small">Remaining this attempt:</div>
 <div class="big"><span id="remaining">121</span></div>
 <div class="small">Visits at this target: <span id="visits">0</span></div>
@@ -110,7 +110,6 @@ button:active { background:#444; }
         <button class="key-btn" onclick="keypadPress('0')">0</button>
         <button class="key-btn key-action" onclick="keypadBackspace()">←</button>
       </div>
-      <button class="key-btn key-enter" onclick="submitVisit()">Enter</button>
     </div>
   </div>
 
@@ -136,7 +135,7 @@ let game = {
 
 const remainingEl = document.getElementById("remaining");
 const targetEl = document.getElementById("target");
-const scoreEl = document.getElementById("score");
+// const scoreEl = document.getElementById("score");
 const statusEl = document.getElementById("status");
 const visitsEl = document.getElementById("visits");
 const consecMissesEl = document.getElementById("consecMisses");
@@ -281,7 +280,7 @@ function undo() {
 
 function updateUI(status="") {
   targetEl.textContent = game.target;
-  scoreEl.textContent = game.score;
+  // scoreEl.textContent = game.score;
   remainingEl.textContent = game.currentRemaining;
   visitsEl.textContent = game.visitsAtTarget;
   consecMissesEl.textContent = game.consecutive9Misses;
