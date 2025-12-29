@@ -172,7 +172,7 @@ function submitVisit(quickSetValue = null) {
   let increment;
   if (quickSetValue !== null) {
     // Disallow a '1-dart' quick success on remaining scores that cannot be finished with 1 dart
-    if (quickSetValue === 1 && invalidSingleFinishes.includes(game.currentRemaining)) {
+    if (quickSetValue === 1 && invalidSingleFinishes.includes(game.currentRemaining) || (game.currentRemaining > 60)) {
       updateUI(`Cannot finish ${game.currentRemaining} with 1 dart.`);
       return;
     }
@@ -209,7 +209,7 @@ function submitVisit(quickSetValue = null) {
 
 
     // Disallow declaring a hit when dartsUsed is 4 or 7 for certain impossible single-dart finishes
-    if (([1, 4, 7].includes(dartsUsed)) && invalidSingleFinishes.includes(game.currentRemaining)) {
+    if (([1, 4, 7].includes(dartsUsed)) && invalidSingleFinishes.includes(game.currentRemaining) || (game.currentRemaining > 60 && dartsUsed === 1)) {
       // revert the pushed state (we called pushState earlier) by restoring last snapshot
       if (history && history.length > 0) {
         const prev = history.pop();
