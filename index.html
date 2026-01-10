@@ -13,10 +13,10 @@ button { background:#222; color:white; border:none; border-radius:6px; }
 button:active { background:#444; }
 /* added: small top-left button style */
 .top-left { position: absolute; top: 12px; left: 12px; padding:8px 10px; font-size:1rem; width:auto; max-width:none; }
-/* added: quick numeric button styles */
-#quickNums { margin-top: 6px; }
-.num-btn { width:64px; margin:6px 6px; padding:8px; font-size:1.2rem; border-radius:6px; background:#444; color:#fff; border:2px solid #fff; box-sizing:border-box; }
-.num-btn:active { background:#666; border-color:#ddd; }
+/* updated: quick numeric button grid */
+#quickNums { margin-top: 6px; display: grid; grid-template-columns: repeat(3, 64px); gap: 6px; justify-content: center; }
+.num-btn { width: 64px; margin: 0; padding: 8px; font-size: 1.2rem; border-radius: 6px; background: #444; color: #fff; border: 2px solid #fff; box-sizing: border-box; }
+.num-btn:active { background: #666; border-color: #ddd; }
 /* added: preset visit buttons */
 .preset-row { margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
 /* make preset buttons narrow despite the global button width:90% rule */
@@ -84,11 +84,17 @@ button:active { background:#444; }
   </div>
 </div>
 
-<!-- quick numeric buttons 1,2,3 kept -->
+<!-- quick numeric buttons 1–9 in a 3x3 grid -->
 <div id="quickNums">
   <button class="num-btn" onclick="submitVisit(1)">1</button>
   <button class="num-btn" onclick="submitVisit(2)">2</button>
   <button class="num-btn" onclick="submitVisit(3)">3</button>
+  <button class="num-btn" onclick="submitVisit(4)">4</button>
+  <button class="num-btn" onclick="submitVisit(5)">5</button>
+  <button class="num-btn" onclick="submitVisit(6)">6</button>
+  <button class="num-btn" onclick="submitVisit(7)">7</button>
+  <button class="num-btn" onclick="submitVisit(8)">8</button>
+  <button class="num-btn" onclick="submitVisit(9)">9</button>
 </div>
 
 <!-- keypad with presets left and right -->
